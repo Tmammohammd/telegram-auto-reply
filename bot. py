@@ -1,0 +1,36 @@
+from telethon import TelegramClient, events
+import json
+import os
+
+api_id = int(os.getenv("API_ID"))
+api_hash = os.getenv("API_HASH")
+
+client = TelegramClient("my_bot_session", api_id, api_hash)
+
+def load_custom_replies():
+    if os.path.exists("custom_replies.json"):
+        with open("custom_replies.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "مرحبا": "أهلاً بك!",
+        "عندي واجب": "أرسل الواجب وأنا أساعدك.",
+        "عندي اختبار": "أرسل المادة أو السؤال وسأساعدك.",
+        "عندي بحث": "أرسل عنوان البحث وسأجهزه لك."
+    }
+
+custom_replies = load_custom_replies()
+
+@client.on(events.NewMessage(incoming=True))
+async def handler(event):
+    text = event.raw_text.lower()
+
+    for keyword, reply in custom_replies.items():
+        if keyword.lower() in text:
+            await event.reply(reply)
+            print(f"تم الرد على: {keyword}")
+            break
+
+print("البوت يعمل الآن...")
+
+client.start()
+client.run_until_disconnected()
